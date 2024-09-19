@@ -30,6 +30,7 @@ func (s *Server) Start() error {
 	router.Mount("/api", api)
 	api.Get("/healthz", s.Healthz)
 	api.Get("/errors", s.Errors)
+	api.Post("/users", s.RegisterUser)
 	return http.ListenAndServe(fmt.Sprintf(":%s", s.listenAddr), router)
 }
 
@@ -38,7 +39,7 @@ func (s *Server) Healthz(w http.ResponseWriter, r *http.Request) {
 		Status string `json:"status"`
 	}
 	utils.RespondWithJson(w, http.StatusOK, &returnVals{
-		Status: "We health",
+		Status: "We healthy",
 	})
 }
 

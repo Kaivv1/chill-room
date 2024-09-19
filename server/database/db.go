@@ -1,16 +1,17 @@
 package db
 
 import (
+	"context"
 	"database/sql"
-	_ "github.com/lib/pq"
 	"log"
-	"time"
+
+	_ "github.com/lib/pq"
 
 	"github.com/Kaivv1/chill-room/types"
 )
 
 type DBFuncs interface {
-	Get() *types.User
+	CreateUser(types.User, context.Context) (types.User, error)
 }
 
 type PostgresDB struct {
@@ -30,12 +31,4 @@ func NewPostgresDB(db_url string) (*PostgresDB, error) {
 	return &PostgresDB{
 		db: db,
 	}, nil
-}
-
-func (p *PostgresDB) Get() *types.User {
-	return &types.User{
-		Id:        1,
-		Name:      "Foo",
-		CreatedAt: time.Now().UTC(),
-	}
 }
