@@ -11,7 +11,7 @@ func DecodeBody(w http.ResponseWriter, r *http.Request, params interface{}, msg 
 	err := decoder.Decode(params)
 	if err != nil {
 		log.Println(msg)
-		RespondWithError(w, http.StatusInternalServerError, "Server error")
+		RespondWithError(w, http.StatusBadRequest, "fill all the fields")
 		return
 	}
 }
