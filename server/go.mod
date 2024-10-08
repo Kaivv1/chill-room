@@ -11,3 +11,5 @@ require (
 require github.com/google/uuid v1.6.0
 
 require golang.org/x/crypto v0.27.0
+
+require github.com/gorilla/websocket v1.5.3

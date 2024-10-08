@@ -30,7 +30,8 @@ func (s *Server) Start() error {
 	router.Mount("/api", api)
 	api.Get("/healthz", s.Healthz)
 	api.Get("/errors", s.Errors)
-	api.Post("/users", s.RegisterUser)
+	// api.Post("/users", s.RegisterUser)
+	api.HandleFunc("/ws", s.wsHandler)
 	return http.ListenAndServe(fmt.Sprintf(":%s", s.listenAddr), router)
 }
 
