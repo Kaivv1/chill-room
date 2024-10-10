@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -9,7 +10,6 @@ import (
 	"github.com/Kaivv1/chill-room/types"
 	"github.com/Kaivv1/chill-room/utils"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // func (s *Server) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -54,5 +54,33 @@ import (
 // }
 
 func (s *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
-
+	type parameters struct {
+		Username string `json:"username"`
+	}
+	type returnVals struct {
+		ID         string    `json:"id"`
+		Created_At time.Time `json:"created_at"`
+		Username   string    `json:"username"`
+	}
+	params := &parameters{}
+	utils.DecodeBody(w, r, params, "Cannot decode body at CreateUser")
+	user, err := s.db.CreateDbUser(types.User{
+		ID:         uuid.New(),
+		Created_At: time.Now().UTC(),
+		Username:   params.Username,
+	}, r.Context())
+	if err != nil {
+		if UserAlreadyExists := strings.Contains(err.Error(), "duplicate key"); UserAlreadyExists {
+			utils.RespondWithError(w, http.StatusConflict, "user already exists")
+			return
+		}
+		utils.RespondWithError(w, 500, fmt.Sprintf("Error while adding user to db: %s", err.Error()))
+		log.Println(err.Error())
+		return
+	}
+	utils.RespondWithJson(w, 201, &returnVals{
+		ID:         user.ID.String(),
+		Created_At: user.Created_At,
+		Username:   user.Username,
+	})
 }

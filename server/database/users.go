@@ -48,16 +48,18 @@ import (
 //	}
 func (p *PostgresDB) CreateDbUser(args types.User, ctx context.Context) (types.User, error) {
 	query := `
-				INSERT INTO users (id, username)
-				VALUES ($1, $2)
+				INSERT INTO users (id, created_at, username)
+				VALUES ($1, $2, $3)
 				RETURNING *;
 				`
 	var user types.User
 	err := p.db.QueryRowContext(ctx, query,
-		args.ID.String(),
+		args.ID,
+		args.Created_At,
 		args.Username,
 	).Scan(
 		&user.ID,
+		&user.Created_At,
 		&user.Username,
 	)
 	return user, err

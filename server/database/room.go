@@ -30,6 +30,7 @@ func (p *PostgresDB) CreateDbRoom(args types.Room, ctx context.Context) (types.R
 		args.Name,
 		args.Is_Active,
 		args.Last_Active_At,
+		args.Creator_ID,
 	).Scan(
 		&room.ID,
 		&room.Created_At,
@@ -37,6 +38,7 @@ func (p *PostgresDB) CreateDbRoom(args types.Room, ctx context.Context) (types.R
 		&room.Name,
 		&room.Is_Active,
 		&room.Last_Active_At,
+		&room.Creator_ID,
 	)
 	return room, err
 }
@@ -50,8 +52,8 @@ func (p *PostgresDB) UserJoinsRoom(args types.Room_User, ctx context.Context) er
 	result, err := p.db.ExecContext(ctx, query,
 		args.ID,
 		args.Created_At,
-		args.Room_ID,
 		args.User_ID,
+		args.Room_ID,
 	)
 	if err != nil {
 		log.Printf("Error occured while adding rooms_users row in db: %s", err.Error())
@@ -63,9 +65,9 @@ func (p *PostgresDB) UserJoinsRoom(args types.Room_User, ctx context.Context) er
 		return err
 	}
 	if rows != 1 {
-		err = errors.New("")
-
-		return
+		err = errors.New("more than 1 row was affected")
+		log.Println(err)
+		return err
 	}
 	return nil
 }
