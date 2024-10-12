@@ -31,6 +31,7 @@ func (s *Server) Start() error {
 	api.Get("/healthz", s.Healthz)
 	api.Get("/errors", s.Errors)
 	api.Post("/users", s.CreateUser)
+	api.Delete("/users", s.DeleteUser)
 	api.Post("/rooms", s.CreateRoom)
 	api.Post("/join-room", s.JoinRoom)
 	api.HandleFunc("/ws", s.wsHandler)

@@ -61,7 +61,6 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		Room_ID string `json:"room_id"`
 		User_ID string `json:"user_id"`
 	}
-	type returnVals struct{}
 	params := &parameters{}
 	utils.DecodeBody(w, r, params, "Error while decoding body in JoinRoom")
 	room_uuid, err := uuid.Parse(params.Room_ID)
@@ -85,5 +84,5 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, 500, "DB error while joining room")
 		return
 	}
-	utils.RespondWithJson(w, 201, returnVals{})
+	w.WriteHeader(201)
 }

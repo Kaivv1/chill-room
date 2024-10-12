@@ -2,8 +2,10 @@ package db
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Kaivv1/chill-room/types"
+	"github.com/google/uuid"
 )
 
 // func (p *PostgresDB) CreateUser(args types.User, ctx context.Context) (types.User, error) {
@@ -63,4 +65,23 @@ func (p *PostgresDB) CreateDbUser(args types.User, ctx context.Context) (types.U
 		&user.Username,
 	)
 	return user, err
+}
+
+func (p *PostgresDB) DeleteDbUser(id uuid.UUID, ctx context.Context) error {
+	query := `
+	DELETE FROM users
+	WHERE id = $1;
+	`
+	result, err := p.db.ExecContext(ctx, query, &id)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
+		return errors.New("only 1 user row was supposed to be deleted")
+	}
+	return nil
 }

@@ -71,7 +71,7 @@ func (s *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}, r.Context())
 	if err != nil {
 		if UserAlreadyExists := strings.Contains(err.Error(), "duplicate key"); UserAlreadyExists {
-			utils.RespondWithError(w, http.StatusConflict, "user already exists")
+			utils.RespondWithError(w, http.StatusConflict, "user with that name already exists")
 			return
 		}
 		utils.RespondWithError(w, 500, fmt.Sprintf("Error while adding user to db: %s", err.Error()))
@@ -83,4 +83,20 @@ func (s *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Created_At: user.Created_At,
 		Username:   user.Username,
 	})
+}
+
+func (s *Server) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	log.Println(id)
+	user_uuid, err := uuid.Parse(id)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusUnprocessableEntity, "not a valid user id detected when deleting user")
+		return
+	}
+	err = s.db.DeleteDbUser(user_uuid, r.Context())
+	if err != nil {
+		utils.RespondWithError(w, 500, "Error while deleting user from db")
+		return
+	}
+	w.WriteHeader(200)
 }

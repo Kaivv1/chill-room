@@ -48,7 +48,7 @@ func (p *PostgresDB) UserJoinsRoom(args types.Room_User, ctx context.Context) er
   INSERT INTO rooms_users (
 	id, created_at, user_id, room_id
 	) VALUES ($1, $2, $3, $4);
-`
+  `
 	result, err := p.db.ExecContext(ctx, query,
 		args.ID,
 		args.Created_At,
