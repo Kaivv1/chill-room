@@ -75,7 +75,6 @@ export default function CreateRoom() {
     }
     updateState("roomName", "error", errors.roomName);
     updateState("username", "error", errors.username);
-
     return errors.roomName === "" && errors.username === "";
   }
 

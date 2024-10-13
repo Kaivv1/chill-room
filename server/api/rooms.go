@@ -73,6 +73,16 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusUnprocessableEntity, "not valid user id")
 		return
 	}
+
+	exists, err := s.db.CheckIfRoomExists(room_uuid, r.Context())
+	if err != nil {
+		utils.RespondWithError(w, 500, "DB error while checking if room exists")
+		return
+	}
+	if !exists {
+		utils.RespondWithError(w, 404, "Room does not exist")
+		return
+	}
 	err = s.db.UserJoinsRoom(types.Room_User{
 		ID:         uuid.New(),
 		Created_At: time.Now().UTC(),
@@ -85,4 +95,28 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(201)
+}
+
+func (s *Server) CheckIfRoomExists(w http.ResponseWriter, r *http.Request) {
+	type returnVals struct {
+		Exists bool `json:"exists"`
+	}
+	room_id := r.URL.Query().Get("id")
+	if room_id == "" {
+		utils.RespondWithError(w, http.StatusBadRequest, "No room id provided to check if it exists")
+		return
+	}
+	room_uuid, err := uuid.Parse(room_id)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusUnprocessableEntity, "Not a valid room id for existence check")
+		return
+	}
+	exists, err := s.db.CheckIfRoomExists(room_uuid, r.Context())
+	if err != nil {
+		utils.RespondWithError(w, 500, "DB error while checking if room exists")
+		return
+	}
+	utils.RespondWithJson(w, 200, returnVals{
+		Exists: exists,
+	})
 }

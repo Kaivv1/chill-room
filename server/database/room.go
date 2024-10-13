@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/Kaivv1/chill-room/types"
+	"github.com/google/uuid"
 )
 
 func (p *PostgresDB) CreateDbRoom(args types.Room, ctx context.Context) (types.Room, error) {
@@ -70,4 +71,19 @@ func (p *PostgresDB) UserJoinsRoom(args types.Room_User, ctx context.Context) er
 		return err
 	}
 	return nil
+}
+
+func (p *PostgresDB) CheckIfRoomExists(id uuid.UUID, ctx context.Context) (bool, error) {
+	query := `
+  SELECT EXISTS(
+    SELECT 1 FROM rooms
+	  WHERE id = $1
+  );
+  `
+	var exists bool
+	err := p.db.QueryRowContext(ctx, query, id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

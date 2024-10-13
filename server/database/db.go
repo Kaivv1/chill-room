@@ -17,6 +17,7 @@ type DBFuncs interface {
 	DeleteDbUser(uuid.UUID, context.Context) error
 	UserJoinsRoom(types.Room_User, context.Context) error
 	CreateDbRoom(types.Room, context.Context) (types.Room, error)
+	CheckIfRoomExists(uuid.UUID, context.Context) (bool, error)
 }
 
 type PostgresDB struct {
