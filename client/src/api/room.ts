@@ -40,3 +40,13 @@ export async function apiUserJoinsRoom(args: ApiUserJoinsRoomArgs) {
       throw error;
     });
 }
+
+export async function apiCheckIfRoomExists(id: string) {
+  return axios
+    .get<{ exists: boolean }>("/api/check-room", {
+      params: { id },
+    })
+    .catch((error) => {
+      throw error;
+    });
+}

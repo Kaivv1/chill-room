@@ -34,6 +34,7 @@ func (s *Server) Start() error {
 	api.Delete("/users", s.DeleteUser)
 	api.Post("/rooms", s.CreateRoom)
 	api.Post("/join-room", s.JoinRoom)
+	api.Get("/check-room", s.CheckIfRoomExists)
 	api.HandleFunc("/ws", s.wsHandler)
 	return http.ListenAndServe(fmt.Sprintf(":%s", s.listenAddr), router)
 }

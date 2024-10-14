@@ -56,7 +56,7 @@ export default function Room() {
   }
 
   return (
-    <div>
+    <div className="h-full">
       <h1 className="text-center">This is a room</h1>
       <p>Send this id to people to join this room</p>
       <div className="flex gap-2 items-center">
@@ -69,6 +69,7 @@ export default function Room() {
           className="w-[290px]"
         />
       </div>
+      <div className="rounded-md border max-h-[600px] h-full p-3"></div>
     </div>
   );
 }
