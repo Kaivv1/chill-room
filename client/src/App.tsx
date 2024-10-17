@@ -18,8 +18,11 @@ const router = createBrowserRouter([
         path: "room",
         loader: async ({ request }) => {
           const room_id = new URL(request.url).searchParams.get("room_id");
+          const user_id = new URL(request.url).searchParams.get("user_id");
           if (!room_id)
             throw new Response("no room_id provided", { status: 404 });
+          if (!user_id)
+            throw new Response("no user_id provided", { status: 404 });
           try {
             const { exists } = (await apiCheckIfRoomExists(room_id)).data;
             if (!exists) {
@@ -27,7 +30,7 @@ const router = createBrowserRouter([
                 status: 404,
               });
             }
-            return null;
+            return { user_id, room_id };
           } catch (error) {
             if (error instanceof Response) {
               throw error;
