@@ -103,6 +103,7 @@ export default function CreateRoom() {
           return { ...res };
         })
         .then(({ room_id, user_id }) => {
+          localStorage.setItem("username", state.username.value);
           navigate(`/room?room_id=${room_id}&user_id=${user_id}`);
         });
     } catch (error) {

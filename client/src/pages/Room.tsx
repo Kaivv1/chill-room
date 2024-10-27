@@ -6,25 +6,32 @@ import { Copy, CopyCheck } from "lucide-react";
 import { Reducer, useEffect, useReducer, useRef } from "react";
 import { useLoaderData } from "react-router-dom";
 
+type Message = {
+  type: "message" | "gif" | "song_url";
+  content: string;
+  sender_id: string;
+  sended_at: Date;
+};
 type RoomLoaderData = {
   user_id: string;
   room_id: string;
 };
-
 type InitialStateProps = {
   isLoading: boolean;
   isCopied: boolean;
+  messages: Array<Message>;
 };
-
 type Action =
   | { type: "DONE_LOADING" }
   | { type: "NOT_LOADING" }
   | { type: "COPIED" }
-  | { type: "NOT_COPIED" };
+  | { type: "NOT_COPIED" }
+  | { type: "SAVE_MESSAGE"; payload: Message };
 
 const initialState: InitialStateProps = {
   isLoading: false,
   isCopied: false,
+  messages: [],
 };
 
 const reducer: Reducer<InitialStateProps, Action> = (state, action) => {
@@ -37,6 +44,8 @@ const reducer: Reducer<InitialStateProps, Action> = (state, action) => {
       return { ...state, isCopied: true };
     case "NOT_COPIED":
       return { ...state, isCopied: false };
+    case "SAVE_MESSAGE":
+      return { ...state, messages: [...state.messages, action.payload] };
     default:
       return state;
   }
@@ -56,6 +65,7 @@ export default function Room() {
   const { user_id, room_id } = useLoaderData() as RoomLoaderData;
   const wsRef = useRef<WebSocket>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   useEffect(
     function () {
       wsRef.current = createWS(user_id, room_id);
@@ -100,7 +110,14 @@ export default function Room() {
 
   function sendMessage() {
     if (!textareaRef.current?.value || !wsRef.current) return;
-    wsRef.current.send(textareaRef.current?.value);
+    wsRef.current.send(
+      JSON.stringify({
+        type: "message",
+        content: textareaRef.current?.value,
+        sender_id: user_id,
+        sended_at: new Date(Date.now()),
+      } as Message)
+    );
   }
 
   return (
@@ -121,7 +138,6 @@ export default function Room() {
       <div className="rounded-md border max-h-[600px] h-full p-3 flex flex-col">
         <div className="h-full"></div>
         <SendMessageArea ref={textareaRef} />
-
         <Button onClick={sendMessage}>Send</Button>
       </div>
     </div>

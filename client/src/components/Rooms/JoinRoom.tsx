@@ -97,6 +97,7 @@ export default function JoinRoom() {
           return id;
         })
         .then((id) => {
+          localStorage.setItem("username", state.username.value);
           navigate(`/room?room_id=${state.roomId.value}&user_id=${id}`);
         });
     } catch (error) {
