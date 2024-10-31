@@ -11,7 +11,7 @@ func DecodeBody(w http.ResponseWriter, r *http.Request, params interface{}, msg 
 	err := decoder.Decode(params)
 	if err != nil {
 		log.Println(msg)
-		RespondWithError(w, http.StatusBadRequest, "Cannot decode request body")
+		RespondWithError(w, http.StatusBadRequest, msg)
 		return
 	}
 }

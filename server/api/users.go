@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -10,93 +9,70 @@ import (
 	"github.com/Kaivv1/chill-room/types"
 	"github.com/Kaivv1/chill-room/utils"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
-// func (s *Server) RegisterUser(w http.ResponseWriter, r *http.Request) {
-// 	type parameters struct {
-// 		Username string `json:"username"`
-// 		Email    string `json:"email"`
-// 		Password string `json:"password"`
-// 	}
-// 	params := &parameters{}
-// 	utils.DecodeBody(w, r, params, "Cannot decode body at RegisterUser")
-// 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		utils.RespondWithError(w, http.StatusInternalServerError, "Problem hashing password while creating user")
-// 		return
-// 	}
-// 	newUser, err := s.db.CreateUser(types.User{
-// 		Id:        uuid.New(),
-// 		CreatedAt: time.Now().UTC(),
-// 		UpdatedAt: time.Now().UTC(),
-// 		Username:  params.Username,
-// 		Email:     params.Email,
-// 		Password:  string(hashedPass),
-// 	}, r.Context())
-
-// 	if err != nil {
-// 		if emailExists := strings.Contains(err.Error(), "\"users_email_key\""); emailExists {
-// 			log.Println("Email already exists")
-// 			utils.RespondWithError(w, http.StatusBadRequest, "User with that email already exists")
-// 			return
-// 		}
-// 		if usernameExists := strings.Contains(err.Error(), "\"users_username_key\""); usernameExists {
-// 			log.Println("Username already exists")
-// 			utils.RespondWithError(w, http.StatusBadRequest, "User with that username already exists")
-// 			return
-// 		}
-// 		log.Println(err.Error())
-// 		utils.RespondWithError(w, 500, err.Error())
-// 		return
-// 	}
-
-// 	utils.RespondWithJson(w, 200, types.UserToUserJson(&newUser))
-// }
-
-func (s *Server) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Username string `json:"username"`
-	}
-	type returnVals struct {
-		ID         string    `json:"id"`
-		Created_At time.Time `json:"created_at"`
-		Username   string    `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	params := &parameters{}
-	utils.DecodeBody(w, r, params, "Cannot decode body at CreateUser")
-	user, err := s.db.CreateDbUser(types.User{
-		ID:         uuid.New(),
-		Created_At: time.Now().UTC(),
-		Username:   params.Username,
+	utils.DecodeBody(w, r, params, "Cannot decode body at RegisterUser")
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "Problem hashing password while creating user")
+		return
+	}
+	newUser, err := s.db.CreateUser(types.User{
+		Id:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Username:  params.Username,
+		Email:     params.Email,
+		Password:  string(hashedPass),
 	}, r.Context())
 	if err != nil {
-		if UserAlreadyExists := strings.Contains(err.Error(), "duplicate key"); UserAlreadyExists {
-			utils.RespondWithError(w, http.StatusConflict, "user with that name already exists")
+		if emailExists := strings.Contains(err.Error(), "\"users_email_key\""); emailExists {
+			log.Println("Email already exists")
+			utils.RespondWithError(w, http.StatusBadRequest, "User with that email already exists")
 			return
 		}
-		utils.RespondWithError(w, 500, fmt.Sprintf("Error while adding user to db: %s", err.Error()))
+		if usernameExists := strings.Contains(err.Error(), "\"users_username_key\""); usernameExists {
+			log.Println("Username already exists")
+			utils.RespondWithError(w, http.StatusBadRequest, "User with that username already exists")
+			return
+		}
 		log.Println(err.Error())
+		utils.RespondWithError(w, 500, err.Error())
 		return
 	}
-	utils.RespondWithJson(w, 201, &returnVals{
-		ID:         user.ID.String(),
-		Created_At: user.Created_At,
-		Username:   user.Username,
-	})
+
+	utils.RespondWithJson(w, 200, types.UserToUserJson(&newUser))
 }
 
-func (s *Server) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	log.Println(id)
-	user_uuid, err := uuid.Parse(id)
-	if err != nil {
-		utils.RespondWithError(w, http.StatusUnprocessableEntity, "not a valid user id detected when deleting user")
+func (s *Server) LoginUser(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	params := &parameters{}
+	utils.DecodeBody(w, r, params, "Cannot decode body when logging in")
+	exists := s.db.CheckEmail(params.Email, r.Context())
+	if !exists {
+		utils.RespondWithError(w, http.StatusNotFound, "Invalid credentials")
 		return
 	}
-	err = s.db.DeleteDbUser(user_uuid, r.Context())
+	pass := s.db.GetUserPassword(params.Email, r.Context())
+	err := bcrypt.CompareHashAndPassword([]byte(pass), []byte(params.Password))
 	if err != nil {
-		utils.RespondWithError(w, 500, "Error while deleting user from db")
+		utils.RespondWithError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
-	w.WriteHeader(200)
+	utils.RespondWithJson(w, 200, struct {
+		Msg string `json:"msg"`
+	}{
+		Msg: "You are logged in",
+	})
 }
